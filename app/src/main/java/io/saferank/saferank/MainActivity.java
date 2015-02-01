@@ -12,13 +12,14 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
+import org.w3c.dom.Text;
+
 import java.util.Calendar;
 
 public class MainActivity
         extends ActionBarActivity
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    private int rating = 0;
     private GoogleApiClient mGoogleApiClient;
 
     @Override
@@ -56,14 +57,19 @@ public class MainActivity
         return super.onOptionsItemSelected(item);
     }
 
+    // Connects to Play services to retrieve GPS data
     public Location getLocation() {
         // Get location with Play services API
+        mGoogleApiClient.connect();
         Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        mGoogleApiClient.disconnect();
         return lastLocation;
     }
 
-    public void setRating(View view) {
-        switch (view.getId()) {
+    // Determines the rating given the button pressed
+    public int getRating(int buttonID) {
+        int rating = 0;
+        switch (buttonID) {
             case R.id.rate1:
                 rating = 1;
                 break;
@@ -80,8 +86,7 @@ public class MainActivity
                 rating = 5;
                 break;
         }
-        TextView ratingLabel = (TextView) findViewById(R.id.rating_label);
-        ratingLabel.setText("Rating " + String.valueOf(rating));
+        return rating;
     }
 
     // Light: float
@@ -102,13 +107,24 @@ public class MainActivity
         Location lastLocation = getLocation();
         if (lastLocation == null) System.out.println("Got no data");
 
-        // Set labels to GPS coordinates
+        // Get rating
+        int rating = getRating(view.getId());
+
+        // Set time label
+        TextView timeLabel = (TextView) findViewById(R.id.time_label);
+        timeLabel.setText(time.getTime().toString());
+
+        // Set labels GPS coordinate labels
         if (lastLocation != null) {
-            TextView latitude = (TextView) findViewById(R.id.lat_label);
-            TextView longitude = (TextView) findViewById(R.id.long_label);
-            latitude.setText(Double.toString(lastLocation.getLatitude()));
-            longitude.setText(Double.toString(lastLocation.getLongitude()));
+            TextView latitudeLabel = (TextView) findViewById(R.id.lat_label);
+            TextView longitudeLabel = (TextView) findViewById(R.id.long_label);
+            latitudeLabel.setText(Double.toString(lastLocation.getLatitude()));
+            longitudeLabel.setText(Double.toString(lastLocation.getLongitude()));
         }
+
+        // Set rating label
+        TextView ratingLabel = (TextView) findViewById(R.id.rating_label);
+        ratingLabel.setText("Rating " + String.valueOf(rating));
     }
 
     @Override

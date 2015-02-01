@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">SafeRank</string>
-    <string name="submit_label">Get data</string>
     <string name="action_settings">Settings</string>
     <string name="rate_1">Very unsafe</string>
     <string name="rate_2">Somewhat unsafe</string>

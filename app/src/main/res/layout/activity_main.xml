@@ -9,12 +9,10 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/getData"
+    <TextView
+        android:id="@+id/time_label"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/submit_label"
-        android:onClick="manageData"/>
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/lat_label"
@@ -36,34 +34,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_5"
-        android:onClick="setRating"/>
+        android:onClick="manageData"/>
 
     <Button
         android:id="@+id/rate4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_4"
-        android:onClick="setRating"/>
+        android:onClick="manageData"/>
 
     <Button
         android:id="@+id/rate3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_3"
-        android:onClick="setRating"/>
+        android:onClick="manageData"/>
 
     <Button
         android:id="@+id/rate2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_2"
-        android:onClick="setRating"/>
+        android:onClick="manageData"/>
 
     <Button
         android:id="@+id/rate1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_1"
-        android:onClick="setRating"/>
+        android:onClick="manageData"/>
 
 </LinearLayout>
