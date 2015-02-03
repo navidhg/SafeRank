@@ -1,7 +1,15 @@
 package io.saferank.saferank;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.app.ActionBarActivity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,13 +22,23 @@ import com.google.android.gms.location.LocationServices;
 
 import org.w3c.dom.Text;
 
+import java.io.IOException;
 import java.util.Calendar;
 
 public class MainActivity
         extends ActionBarActivity
-        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        SensorEventListener {
 
-    private GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mGoogleApiClient; // Allows retrieval of GPS coordinates and map
+
+    // Sensors. Method that is called when sensors update doesn't return a value, so sensor values
+    // need to be stored globally
+    private SensorManager sMgr;
+    private Sensor light;
+    float currentLight = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +51,10 @@ public class MainActivity
                 .addConnectionCallbacks((GoogleApiClient.ConnectionCallbacks) this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+        // Register sensors
+        sMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
+        light = sMgr.getDefaultSensor(Sensor.TYPE_LIGHT);
     }
 
     @Override
@@ -62,7 +84,7 @@ public class MainActivity
         // Get location with Play services API
         mGoogleApiClient.connect();
         Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        mGoogleApiClient.disconnect();
+        //mGoogleApiClient.disconnect();
         return lastLocation;
     }
 
@@ -122,9 +144,26 @@ public class MainActivity
             longitudeLabel.setText(Double.toString(lastLocation.getLongitude()));
         }
 
+        // Set light level label
+        TextView lightingLabel = (TextView) findViewById(R.id.lighting_label);
+        lightingLabel.setText(Float.toString(currentLight));
+
         // Set rating label
         TextView ratingLabel = (TextView) findViewById(R.id.rating_label);
         ratingLabel.setText("Rating " + String.valueOf(rating));
+
+        // Check that internet connection is available
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+        if (networkInfo != null && networkInfo.isConnected()) {
+            // Got connection
+
+        } else {
+            System.out.println("No connection available");
+            // Store data locally
+        }
     }
 
     @Override
@@ -141,4 +180,53 @@ public class MainActivity
     public void onConnectionFailed(ConnectionResult connectionResult) {
         System.out.println("Connection failed");
     }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        // Set global lighting variable to updated value
+        if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+            currentLight = event.values[0];
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sMgr.registerListener(this, light, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sMgr.unregisterListener(this, light);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    private class UploadDataTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... urls) {
+
+            try {
+                return uploadData(urls[0]);
+            } catch (IOException e) {
+                return "Couldn't upload data";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            // Do stuff when task has finished
+        }
+
+        private String uploadData(String url) throws IOException {
+            return null;
+        }
+
+    }
+
 }
