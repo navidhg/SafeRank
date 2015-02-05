@@ -32,13 +32,18 @@ public class MainActivity
         GoogleApiClient.OnConnectionFailedListener,
         SensorEventListener {
 
+    private int userID = 1; // TODO: Figure out id mechanism
+
     private GoogleApiClient mGoogleApiClient; // Allows retrieval of GPS coordinates and map
 
     // Sensors. Method that is called when sensors update doesn't return a value, so sensor values
     // need to be stored globally
     private SensorManager sMgr;
     private Sensor light;
-    float currentLight = 0;
+    private float currentLight = 0;
+
+    // GPS. Can only read value once connected, so GPS is set in onConnect() method
+    private Location lastLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +56,8 @@ public class MainActivity
                 .addConnectionCallbacks((GoogleApiClient.ConnectionCallbacks) this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+        mGoogleApiClient.connect();
 
         // Register sensors
         sMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -82,9 +89,9 @@ public class MainActivity
     // Connects to Play services to retrieve GPS data
     public Location getLocation() {
         // Get location with Play services API
-        mGoogleApiClient.connect();
+        //mGoogleApiClient.connect();
         Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        //mGoogleApiClient.disconnect();
+//        mGoogleApiClient.disconnect();
         return lastLocation;
     }
 
@@ -125,16 +132,27 @@ public class MainActivity
         // Get time
         Calendar time = Calendar.getInstance();
 
-        // Get GPS data
+        // Get GPS data (and wait until we get it)
         Location lastLocation = getLocation();
         if (lastLocation == null) System.out.println("Got no data");
 
         // Get rating
         int rating = getRating(view.getId());
 
+        // Get brightness (although it's set globally, want local reference in case it changes)
+        float brightness = currentLight;
+
         // Set time label
         TextView timeLabel = (TextView) findViewById(R.id.time_label);
         timeLabel.setText(time.getTime().toString());
+
+        // Store data in SafetyObject data so we can get its JSON representation as a string
+        SafetyData data;
+        if (lastLocation != null) {
+            data = new SafetyData(userID, time, rating, lastLocation, currentLight);
+            String JSONData = data.getJSON();
+            System.out.println(JSONData);
+        }
 
         // Set labels GPS coordinate labels
         if (lastLocation != null) {
