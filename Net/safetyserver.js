@@ -1,4 +1,5 @@
 // Imports
+var config = require("./config");
 var pg = require("pg");
 var express = require("express");
 var bodyParser = require("body-parser")
@@ -8,7 +9,8 @@ var app = express();
 app.use(bodyParser.json());
 
 // Set up postgres details
-var conString = "postgres://navidhg:password@localhost/safetydata";
+var conString = config.getPostgresConnectionString();
+console.log(conString);
 var client = new pg.Client(conString);
 
 // POST route
