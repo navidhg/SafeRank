@@ -10,7 +10,6 @@ app.use(bodyParser.json());
 
 // Set up postgres details
 var conString = config.getPostgresConnectionString();
-console.log(conString);
 var client = new pg.Client(conString);
 
 // POST route
