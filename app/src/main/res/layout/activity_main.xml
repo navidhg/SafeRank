@@ -69,4 +69,9 @@
         android:text="@string/rate_1"
         android:onClick="manageData"/>
 
+    <TextView
+        android:id="@+id/progress_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 </LinearLayout>

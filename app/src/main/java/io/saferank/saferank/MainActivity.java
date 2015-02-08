@@ -20,9 +20,12 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
-import org.w3c.dom.Text;
-
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Calendar;
 
 public class MainActivity
@@ -33,6 +36,8 @@ public class MainActivity
         SensorEventListener {
 
     private int userID = 1; // TODO: Figure out id mechanism
+
+    private String serverUploadURL = "http://178.62.32.221:5000/upload";
 
     private GoogleApiClient mGoogleApiClient; // Allows retrieval of GPS coordinates and map
 
@@ -86,12 +91,14 @@ public class MainActivity
         return super.onOptionsItemSelected(item);
     }
 
-    // Connects to Play services to retrieve GPS data
+    public int getUserID() {
+        
+        return 3;
+    }
+
+    // Retrieves GPS from connected Google API Client instance
     public Location getLocation() {
-        // Get location with Play services API
-        //mGoogleApiClient.connect();
         Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-//        mGoogleApiClient.disconnect();
         return lastLocation;
     }
 
@@ -118,21 +125,17 @@ public class MainActivity
         return rating;
     }
 
-    // Light: float
-    // Time/date: calendar
-    // GPS: location
-    // Rating: integer
-
     // Write readings to file
-    public void saveDetails(Location location, Calendar time, float light) {
+    public void saveDetails(SafetyData data) {
 
     }
 
+    // Handles full lifecycle of data retrieval and storage on remote server
     public void manageData(View view) {
         // Get time
         Calendar time = Calendar.getInstance();
 
-        // Get GPS data (and wait until we get it)
+        // Get GPS data
         Location lastLocation = getLocation();
         if (lastLocation == null) System.out.println("Got no data");
 
@@ -142,19 +145,22 @@ public class MainActivity
         // Get brightness (although it's set globally, want local reference in case it changes)
         float brightness = currentLight;
 
+        // Clear progress status
+        TextView progressLabel = (TextView) findViewById(R.id.progress_label);
+        progressLabel.setText("");
+
         // Set time label
         TextView timeLabel = (TextView) findViewById(R.id.time_label);
         timeLabel.setText(time.getTime().toString());
 
-        // Store data in SafetyObject data so we can get its JSON representation as a string
-        SafetyData data;
+        // Store data in SafetyData object so we can get its JSON representation as a string
+        SafetyData data = null;
         if (lastLocation != null) {
             data = new SafetyData(userID, time, rating, lastLocation, currentLight);
-            String JSONData = data.getJSON();
-            System.out.println(JSONData);
+            System.out.println(data.getJSON());
         }
 
-        // Set labels GPS coordinate labels
+        // Set GPS coordinate labels
         if (lastLocation != null) {
             TextView latitudeLabel = (TextView) findViewById(R.id.lat_label);
             TextView longitudeLabel = (TextView) findViewById(R.id.long_label);
@@ -177,9 +183,12 @@ public class MainActivity
 
         if (networkInfo != null && networkInfo.isConnected()) {
             // Got connection
+            System.out.println("Got internet connection");
+            // Run method to post data
+            new UploadDataTask().execute(serverUploadURL, data.getJSON());
 
         } else {
-            System.out.println("No connection available");
+            System.out.println("No internet connection available");
             // Store data locally
         }
     }
@@ -196,7 +205,8 @@ public class MainActivity
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        System.out.println("Connection failed");
+        System.out.println("Connection to Google Play Services API failed");
+        // Tell user that their GPS coordinates can't be read
     }
 
     @Override
@@ -227,10 +237,10 @@ public class MainActivity
     private class UploadDataTask extends AsyncTask<String, Void, String> {
 
         @Override
-        protected String doInBackground(String... urls) {
-
+        protected String doInBackground(String... params) {
+            // params[0] holds the URL, params[1] holds the data to be sent as a JSON string
             try {
-                return uploadData(urls[0]);
+                return uploadData(params[0], params[1]);
             } catch (IOException e) {
                 return "Couldn't upload data";
             }
@@ -238,11 +248,39 @@ public class MainActivity
 
         @Override
         protected void onPostExecute(String result) {
-            // Do stuff when task has finished
+            // Set status label to complete
+            TextView progressLabel = (TextView) findViewById(R.id.progress_label);
+            progressLabel.setText("Uploaded data");
         }
 
-        private String uploadData(String url) throws IOException {
-            return null;
+        private String uploadData(String url, String jsonData) throws IOException {
+            URL server = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) server.openConnection();
+
+            // Set request headers
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-type", "application/json");
+            con.setRequestProperty("Accept", "text/plain");
+
+            // Send request
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(jsonData);
+            wr.flush();
+            wr.close();
+
+            // Get result back ('success' if there were no problems with the request)
+            int responseCode = con.getResponseCode();
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            return Integer.toString(responseCode) + ", " + response.toString();
         }
 
     }

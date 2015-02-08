@@ -31,7 +31,7 @@ public class SafetyData {
     public String getJSON() {
         JSONObject data = new JSONObject();
         // Get a postgres compatible timestamp representation
-        SimpleDateFormat postgresFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+        SimpleDateFormat postgresFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         String timestamp = postgresFormat.format(sampleTime.getTime());
         try {
             data.put("userid", userID);
