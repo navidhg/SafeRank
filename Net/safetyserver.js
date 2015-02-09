@@ -12,7 +12,9 @@ app.use(bodyParser.json());
 var conString = config.getPostgresConnectionString();
 var client = new pg.Client(conString);
 
-// POST route
+// POST routes
+
+// Safety data
 app.post("/upload", function(req, res) {
   // Write out POST body
   console.log('User ID: ' + req.body.userid);
@@ -34,6 +36,27 @@ app.post("/upload", function(req, res) {
         return console.error("Error running query", err);
       }
       console.log("Data input was successful")
+    });
+  });
+});
+
+// Storing a new user given an email address
+app.post("/register", function(req, res) {
+  // Write out POST body
+  console.log("Email: " + req.body.email);
+  res.end("success");
+
+  // Connect to postgres and execute query
+  pg.connect(conString, function(err, client, done) {
+    if (err) {
+      return console.error("Could not connect to postgres", err);
+    }
+    console.log("Querying...");
+    client.query("INSERT INTO userdetail (email) VALUES ( ($1) )", [req.body.email], function(err, result) {
+      if (err) {
+        return console.error("Error running query", err);
+      }
+      console.log("New user successfully created");
     });
   });
 });
