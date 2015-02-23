@@ -87,6 +87,7 @@ app.get('/data/:latitude/:longitude/:radius', function(req, res) {
       console.log(result.rows);
       res.type('text/plain');
       res.json(result.rows);
+      res.end();
     });
   });
 });
