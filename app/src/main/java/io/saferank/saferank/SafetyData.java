@@ -27,6 +27,17 @@ public class SafetyData {
         this.brightness = brightness;
     }
 
+    // Returns String because SQLite needs it in this way
+    public String getSampleTime() {
+        SimpleDateFormat postgresFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        String timestamp = postgresFormat.format(sampleTime.getTime());
+        return timestamp;
+    }
+
+    public int getRating() { return rating; }
+    public Location getLocation() { return location; }
+    public float getBrightness() { return brightness; }
+
     /* Return data as JSON string. Used when data is sent to server */
     public String getJSON() {
         JSONObject data = new JSONObject();

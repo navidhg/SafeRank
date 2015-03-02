@@ -1,6 +1,7 @@
 package io.saferank.saferank;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -11,9 +12,12 @@ import android.net.NetworkInfo;
 import android.support.v7.app.ActionBarActivity;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -35,7 +39,7 @@ public class MainActivity
         GoogleApiClient.OnConnectionFailedListener,
         SensorEventListener {
 
-    private int userID = 1; // TODO: Figure out id mechanism
+    private int userID = 1; // TODO: Figure out id mechanism (let's randomise!)
 
     private String serverUploadURL = "http://178.62.32.221:5000/upload";
 
@@ -49,6 +53,8 @@ public class MainActivity
 
     // GPS. Can only read value once connected, so GPS is set in onConnect() method
     private Location lastLocation;
+
+    private SafetyDataSource datasource; // Stores data locally
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +73,11 @@ public class MainActivity
         // Register sensors
         sMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
         light = sMgr.getDefaultSensor(Sensor.TYPE_LIGHT);
+
+        // Open connection to local db
+        datasource = new SafetyDataSource(this);
+        datasource.open();
+
     }
 
     @Override
@@ -127,7 +138,7 @@ public class MainActivity
 
     // Write readings to file
     public void saveDetails(SafetyData data) {
-
+        datasource.addPrivateReading(data);
     }
 
     // Handles full lifecycle of data retrieval and storage on remote server
@@ -159,6 +170,9 @@ public class MainActivity
             data = new SafetyData(userID, time, rating, lastLocation, currentLight);
             System.out.println(data.getJSON());
         }
+
+        // Save it locally
+        saveDetails(data);
 
         // Set GPS coordinate labels
         if (lastLocation != null) {

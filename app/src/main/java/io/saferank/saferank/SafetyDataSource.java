@@ -1,7 +1,11 @@
 package io.saferank.saferank;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import java.util.List;
 
 /**
  * Created by navidhg on 20/02/15.
@@ -26,5 +30,28 @@ public class SafetyDataSource {
     public void close() {
         dbHelper.close();
     }
+
+    // sampletime
+    // rating
+    // lat
+    // long
+    // brightness
+    public long addPrivateReading(SafetyData data) {
+        ContentValues values = new ContentValues();
+
+        values.put("sampletime", data.getSampleTime());
+        values.put("rating", data.getRating());
+        values.put("latitude", data.getLocation().getLatitude());
+        values.put("longitude", data.getLocation().getLongitude());
+        values.put("brightness", data.getBrightness());
+
+        long insertID = database.insert("SafetyDataPrivate", null, values);
+
+        return insertID;
+    }
+
+    //public List<Object> getAllreadings() {
+        //Cursor cursor = database.query("SafetyDataPrivate", allColumns, )
+    //}
 
 }
