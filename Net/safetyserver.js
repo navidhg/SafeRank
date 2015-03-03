@@ -63,6 +63,29 @@ app.post("/register", function(req, res) {
 
 // GET routes
 
+// Returning all public data past a certain row (rnum)
+app.get('/data/test/:rnum', function(req, res) {
+  pg.connect(conString, function(err, client, done) {
+    if (err) {
+      return console.error('Could not connect to postgres.', err);
+    }
+    console.log('Querying...');
+
+
+    client.query('SELECT rowID, sampletime, rating, latitude, longitude, brightness FROM SafetyTest WHERE rowID > $1', 
+      [req.params.rnum], function(err, result) {
+      if (err) {
+        return console.error('Error running query', err);
+      }
+      console.log("Query was successful");
+      console.log(result.rows);
+      res.type('text/plain');
+      res.json(result.rows);
+      res.end();
+    });
+  });
+});
+
 // Longitude and latitude are supplied in degrees
 // Radius is supplied in km
 app.get('/data/:latitude/:longitude/:radius', function(req, res) {

@@ -139,6 +139,7 @@ public class MainActivity
     // Write readings to file
     public void saveDetails(SafetyData data) {
         datasource.addPrivateReading(data);
+        datasource.getAllreadings();
     }
 
     // Handles full lifecycle of data retrieval and storage on remote server

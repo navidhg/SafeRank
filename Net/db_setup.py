@@ -9,6 +9,7 @@ cur = conn.cursor()
 createUserTableQuery = 'CREATE TABLE UserDetail (\
 							id SERIAL PRIMARY KEY, email TEXT)'
 createDetailTableQuery = 'CREATE TABLE SafetyDetail(\
+							rowID SERIAL\
 							userID integer REFERENCES UserDetail(id),\
 							sampletime TIMESTAMP,\
 							rating INTEGER,\
@@ -16,6 +17,8 @@ createDetailTableQuery = 'CREATE TABLE SafetyDetail(\
 							longitude NUMERIC,\
 							brightness NUMERIC,\
 							PRIMARY KEY(userID, sampletime))'
+
+print createDetailTableQuery
 
 # Execute creation queries
 cur.execute(createUserTableQuery)

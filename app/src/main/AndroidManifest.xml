@@ -36,6 +36,12 @@
             android:windowSoftInputMode="adjustResize|stateVisible" >
         </activity>
 
+        <service
+            android:name=".NotificationService"
+            android:exported="false">
+        </service>
+
+
     </application>
 
 </manifest>

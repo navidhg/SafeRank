@@ -50,8 +50,16 @@ public class SafetyDataSource {
         return insertID;
     }
 
-    //public List<Object> getAllreadings() {
-        //Cursor cursor = database.query("SafetyDataPrivate", allColumns, )
-    //}
+
+    public void getAllreadings() {
+        String select = "SELECT * FROM SafetyDataPrivate";
+        Cursor cursor = database.rawQuery(select, null);
+        String[] data = null;
+            if (cursor.moveToFirst()) {
+        do {
+            System.out.println(cursor.getString(1));
+        } while (cursor.moveToNext());
+    }
+}
 
 }
