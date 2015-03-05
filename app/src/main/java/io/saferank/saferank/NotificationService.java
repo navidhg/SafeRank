@@ -9,7 +9,7 @@ import android.content.Intent;
 public class NotificationService extends IntentService {
 
     public NotificationService() {
-        super("aids");
+        super("test");
     }
 
     @Override

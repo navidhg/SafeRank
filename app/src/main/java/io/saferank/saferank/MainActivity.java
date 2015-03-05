@@ -1,12 +1,16 @@
 package io.saferank.saferank;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v7.app.ActionBarActivity;
@@ -14,6 +18,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,10 +29,21 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Calendar;
@@ -39,9 +55,11 @@ public class MainActivity
         GoogleApiClient.OnConnectionFailedListener,
         SensorEventListener {
 
-    private int userID = 1; // TODO: Figure out id mechanism (let's randomise!)
+    private int userID = 1;
+    private int userNotificationID = 2;
 
     private String serverUploadURL = "http://178.62.32.221:5000/upload";
+    private String rowCheckURL = "http://178.62.32.221:5000/data/rows";
 
     private GoogleApiClient mGoogleApiClient; // Allows retrieval of GPS coordinates and map
 
@@ -54,7 +72,10 @@ public class MainActivity
     // GPS. Can only read value once connected, so GPS is set in onConnect() method
     private Location lastLocation;
 
-    private SafetyDataSource datasource; // Stores data locally
+    public static SafetyDataSource datasource; // Stores data locally
+
+    // Determines if app was accessed from notification
+    boolean fromNotification = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +88,7 @@ public class MainActivity
                 .addConnectionCallbacks((GoogleApiClient.ConnectionCallbacks) this)
                 .addOnConnectionFailedListener(this)
                 .build();
-
+        //.addApi(ActivityRecognition.API)
         mGoogleApiClient.connect();
 
         // Register sensors
@@ -78,6 +99,31 @@ public class MainActivity
         datasource = new SafetyDataSource(this);
         datasource.open();
 
+        // Setup variable holding the number of synced rows
+        SharedPreferences prefs = this.getSharedPreferences("prefs", MODE_WORLD_READABLE);
+        if (!prefs.contains("syncNum")) {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("syncNum", 0);
+        }
+
+        // Setup alarm to periodically fire up service to generate notification
+        AlarmManager alarmManager = (AlarmManager) getSystemService(this.ALARM_SERVICE);
+        Intent intent = new Intent(this, MyService.class);
+//        this.startService(intent);
+        PendingIntent alarmIntent = PendingIntent.getService(this, 0, intent, 0);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+                Calendar.getInstance().getTimeInMillis(), 10*60*1000, alarmIntent);
+        Log.i("LOOK HERE", "ALARM HAS BEEN SET");
+
+        // Start service that periodically notifies user to record data
+//        Intent i = new Intent(this, MyService.class);
+//        this.startService(i);
+
+        // If app was launched from notification, intent will have bundle
+        Intent parentIntent = getIntent();
+        if (parentIntent.hasExtra("fromNotification")) {
+            fromNotification = true;
+        }
     }
 
     @Override
@@ -139,73 +185,79 @@ public class MainActivity
     // Write readings to file
     public void saveDetails(SafetyData data) {
         datasource.addPrivateReading(data);
-        datasource.getAllreadings();
+        //datasource.getAllreadings();
     }
 
     // Handles full lifecycle of data retrieval and storage on remote server
     public void manageData(View view) {
-        // Get time
-        Calendar time = Calendar.getInstance();
+        // Only continue if GPS is available
+        LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            // Get time
+            Calendar time = Calendar.getInstance();
 
-        // Get GPS data
-        Location lastLocation = getLocation();
-        if (lastLocation == null) System.out.println("Got no data");
+            // Get GPS data
+            Location lastLocation = getLocation();
+            if (lastLocation == null) System.out.println("Got no data");
 
-        // Get rating
-        int rating = getRating(view.getId());
+            // Get rating
+            int rating = getRating(view.getId());
 
-        // Get brightness (although it's set globally, want local reference in case it changes)
-        float brightness = currentLight;
+            // Get brightness (although it's set globally, want local reference in case it changes)
+            float brightness = currentLight;
 
-        // Clear progress status
-        TextView progressLabel = (TextView) findViewById(R.id.progress_label);
-        progressLabel.setText("");
+            // Clear progress status
+            TextView progressLabel = (TextView) findViewById(R.id.progress_label);
+            progressLabel.setText("");
 
-        // Set time label
-        TextView timeLabel = (TextView) findViewById(R.id.time_label);
-        timeLabel.setText(time.getTime().toString());
+            // Set time label
+            TextView timeLabel = (TextView) findViewById(R.id.time_label);
+            timeLabel.setText(time.getTime().toString());
 
-        // Store data in SafetyData object so we can get its JSON representation as a string
-        SafetyData data = null;
-        if (lastLocation != null) {
-            data = new SafetyData(userID, time, rating, lastLocation, currentLight);
-            System.out.println(data.getJSON());
-        }
+            // Store data in SafetyData object so we can get its JSON representation as a string
+            SafetyData data = null;
+            if (lastLocation != null) {
+                int sendID = fromNotification ? userNotificationID : userID;
+                data = new SafetyData(sendID, time, rating, lastLocation, currentLight);
+                System.out.println(data.getJSON());
+            }
 
-        // Save it locally
-        saveDetails(data);
+            // Save it locally
+            saveDetails(data);
 
-        // Set GPS coordinate labels
-        if (lastLocation != null) {
-            TextView latitudeLabel = (TextView) findViewById(R.id.lat_label);
-            TextView longitudeLabel = (TextView) findViewById(R.id.long_label);
-            latitudeLabel.setText(Double.toString(lastLocation.getLatitude()));
-            longitudeLabel.setText(Double.toString(lastLocation.getLongitude()));
-        }
+            // Set GPS coordinate labels
+            if (lastLocation != null) {
+                TextView latitudeLabel = (TextView) findViewById(R.id.lat_label);
+                TextView longitudeLabel = (TextView) findViewById(R.id.long_label);
+                latitudeLabel.setText(Double.toString(lastLocation.getLatitude()));
+                longitudeLabel.setText(Double.toString(lastLocation.getLongitude()));
+            }
 
-        // Set light level label
-        TextView lightingLabel = (TextView) findViewById(R.id.lighting_label);
-        lightingLabel.setText(Float.toString(currentLight));
+            // Set light level label
+            TextView lightingLabel = (TextView) findViewById(R.id.lighting_label);
+            lightingLabel.setText(Float.toString(currentLight));
 
-        // Set rating label
-        TextView ratingLabel = (TextView) findViewById(R.id.rating_label);
-        ratingLabel.setText("Rating " + String.valueOf(rating));
+            // Set rating label
+            TextView ratingLabel = (TextView) findViewById(R.id.rating_label);
+            ratingLabel.setText("Rating " + String.valueOf(rating));
 
-        // Check that internet connection is available
-        ConnectivityManager connectivityManager = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+            // Check that internet connection is available
+            ConnectivityManager connectivityManager = (ConnectivityManager)
+                    getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
 
-        if (networkInfo != null && networkInfo.isConnected()) {
-            // Got connection
-            System.out.println("Got internet connection");
-            // Run method to post data
-            new UploadDataTask().execute(serverUploadURL, data.getJSON());
+            if (networkInfo != null && networkInfo.isConnected()) {
+                // Got connection
+                System.out.println("Got internet connection");
+                // Run method to post data
+                new UploadDataTask().execute(serverUploadURL, data.getJSON());
+//                new SyncDataTask().execute(serverUploadURL, data.getJSON());
 
-        } else {
-            System.out.println("No internet connection available");
-            // Store data locally
-        }
+            } else {
+                System.out.println("No internet connection available");
+                // Store data locally
+            }
+        } else System.out.println("GPS not enabled");
     }
 
     @Override
@@ -268,6 +320,7 @@ public class MainActivity
             progressLabel.setText("Uploaded data");
         }
 
+        // Also handles
         private String uploadData(String url, String jsonData) throws IOException {
             URL server = new URL(url);
             HttpURLConnection con = (HttpURLConnection) server.openConnection();
@@ -294,8 +347,63 @@ public class MainActivity
                 response.append(inputLine);
             }
             in.close();
-
             return Integer.toString(responseCode) + ", " + response.toString();
+        }
+
+    }
+
+    private class SyncDataTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            // params[0] holds the URL, params[1] holds the data to be sent as a JSON string
+            try {
+                return uploadData(params[0], params[1]);
+            } catch (IOException e) {
+                return "Couldn't sync data";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+        }
+
+        private String uploadData(String url, String jsonData) throws IOException {
+            InputStream is = null;
+            // Only display the first 500 characters of the retrieved
+            // web page content.
+            int len = 500;
+
+            try {
+                URL rowUrl = new URL(rowCheckURL);
+                HttpURLConnection conn = (HttpURLConnection) rowUrl.openConnection();
+                conn.setReadTimeout(10000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
+                // Starts the query
+                conn.connect();
+                int rowResponse = conn.getResponseCode();
+                System.out.println("Response: " + rowResponse);
+                is = conn.getInputStream();
+
+                // Convert the InputStream into a string
+                Reader reader = null;
+                reader = new InputStreamReader(is, "UTF-8");
+                char[] buffer = new char[len];
+                reader.read(buffer);
+                String rowsString = new String(buffer);
+                System.out.println(rowsString);
+                return rowsString;
+
+                // Makes sure that the InputStream is closed after the app is
+                // finished using it.
+            } finally {
+                if (is != null) {
+                    is.close();
+                }
+            }
         }
 
     }

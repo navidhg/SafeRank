@@ -39,35 +39,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_5"
-        android:onClick="manageData"/>
+        android:onClick="manageData"
+        android:background="#00FF00"/>
 
     <Button
         android:id="@+id/rate4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_4"
-        android:onClick="manageData"/>
+        android:onClick="manageData"
+        android:background="#CCFF33"/>
 
     <Button
         android:id="@+id/rate3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_3"
-        android:onClick="manageData"/>
+        android:onClick="manageData"
+        android:background="#FFFF00"/>
 
     <Button
         android:id="@+id/rate2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_2"
-        android:onClick="manageData"/>
+        android:onClick="manageData"
+        android:background="#FF9900"/>
 
     <Button
         android:id="@+id/rate1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rate_1"
-        android:onClick="manageData"/>
+        android:onClick="manageData"
+        android:background="#FF0000"/>
 
     <TextView
         android:id="@+id/progress_label"
