@@ -55,8 +55,8 @@ public class MainActivity
         GoogleApiClient.OnConnectionFailedListener,
         SensorEventListener {
 
-    private int userID = 1;
-    private int userNotificationID = 2;
+    private int userID = 29;
+    private int userNotificationID = 30;
 
     private String serverUploadURL = "http://178.62.32.221:5000/upload";
     private String rowCheckURL = "http://178.62.32.221:5000/data/rows";
@@ -112,7 +112,7 @@ public class MainActivity
 //        this.startService(intent);
         PendingIntent alarmIntent = PendingIntent.getService(this, 0, intent, 0);
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-                Calendar.getInstance().getTimeInMillis(), 10*60*1000, alarmIntent);
+                Calendar.getInstance().getTimeInMillis(), 45*60*1000, alarmIntent);
         Log.i("LOOK HERE", "ALARM HAS BEEN SET");
 
         // Start service that periodically notifies user to record data
@@ -218,6 +218,7 @@ public class MainActivity
             SafetyData data = null;
             if (lastLocation != null) {
                 int sendID = fromNotification ? userNotificationID : userID;
+                if (fromNotification) fromNotification = false;
                 data = new SafetyData(sendID, time, rating, lastLocation, currentLight);
                 System.out.println(data.getJSON());
             }
