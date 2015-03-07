@@ -86,7 +86,9 @@ public class MyService extends Service
     public void onConnected(Bundle bundle) {
         System.out.println("Connected to Google Play Services in MyService, about to launch intent");
         Intent i = new Intent(this, ActivityRecognitionService.class);
-        PendingIntent pi = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+//        PendingIntent pi = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
+
         //pi.
         ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mGoogleApiClient, 10*60*1000, pi);
 //        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates()
