@@ -107,45 +107,45 @@ public class MainActivity
         }
 
         // Setup alarm to periodically fire up service to generate notification
-        AlarmManager alarmManager = (AlarmManager) getSystemService(this.ALARM_SERVICE);
-        Intent intent = new Intent(this, FixedService.class);
-        PendingIntent alarmIntent = PendingIntent.getService(this, 0, intent, 0);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        calendar.set(Calendar.HOUR_OF_DAY, 10);
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, alarmIntent);
-
-
-        calendar.set(Calendar.HOUR_OF_DAY, 11);
-        calendar.set(Calendar.MINUTE, 30);
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, alarmIntent);
-
-        calendar.set(Calendar.HOUR_OF_DAY, 12);
-        calendar.set(Calendar.MINUTE, 30);
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, alarmIntent);
-
-        calendar.set(Calendar.HOUR_OF_DAY, 15);
-        calendar.set(Calendar.MINUTE, 0);
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, alarmIntent);
-
-        calendar.set(Calendar.HOUR_OF_DAY, 18);
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, alarmIntent);
-
-        calendar.set(Calendar.HOUR_OF_DAY, 21);
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, alarmIntent);
+//        AlarmManager alarmManager = (AlarmManager) getSystemService(this.ALARM_SERVICE);
+//        Intent intent = new Intent(this, FixedService.class);
+//        PendingIntent alarmIntent = PendingIntent.getService(this, 0, intent, 0);
+//
+//        Calendar calendar = Calendar.getInstance();
+//        calendar.setTimeInMillis(System.currentTimeMillis());
+//        calendar.set(Calendar.HOUR_OF_DAY, 10);
+//
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+//                AlarmManager.INTERVAL_DAY, alarmIntent);
+//
+//
+//        calendar.set(Calendar.HOUR_OF_DAY, 11);
+//        calendar.set(Calendar.MINUTE, 30);
+//
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+//                AlarmManager.INTERVAL_DAY, alarmIntent);
+//
+//        calendar.set(Calendar.HOUR_OF_DAY, 12);
+//        calendar.set(Calendar.MINUTE, 30);
+//
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+//                AlarmManager.INTERVAL_DAY, alarmIntent);
+//
+//        calendar.set(Calendar.HOUR_OF_DAY, 15);
+//        calendar.set(Calendar.MINUTE, 0);
+//
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+//                AlarmManager.INTERVAL_DAY, alarmIntent);
+//
+//        calendar.set(Calendar.HOUR_OF_DAY, 18);
+//
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+//                AlarmManager.INTERVAL_DAY, alarmIntent);
+//
+//        calendar.set(Calendar.HOUR_OF_DAY, 21);
+//
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+//                AlarmManager.INTERVAL_DAY, alarmIntent);
 
         // Start service that launches activity monitor
         Intent activityIntent = new Intent(this, MyService.class);
