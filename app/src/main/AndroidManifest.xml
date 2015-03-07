@@ -49,6 +49,8 @@
 
         <service
             android:name=".ActivityRecognitionService"/>
+        
+        <service android:name=".FixedService"/>
         <!--<service-->
             <!--android:name=".MyService"-->
             <!--android:process=":myprocess"/>-->

@@ -36,16 +36,9 @@ public class MyService extends Service
 
     private GoogleApiClient mGoogleApiClient;
 
-    @Override
-    @TargetApi(16)
-    public int onStartCommand(Intent intent, int flags, int startID) {
-        System.out.println("Service is being launched");
-        Log.println(1, "Service", "Running");
-        // Make sure service is never killed
-        //startForeground(1, null);
-//        Toast.makeText(this, "hello", Toast.LENGTH_SHORT).show();
 
-        // Connect to Google Play Services
+    @Override
+    public void onCreate() {
         int resp = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         System.out.println("About to connect to Google Play Services in MyService");
         if (resp == ConnectionResult.SUCCESS) {
@@ -58,6 +51,29 @@ public class MyService extends Service
 
             mGoogleApiClient.connect();
         }
+    }
+
+    @Override
+    @TargetApi(16)
+    public int onStartCommand(Intent intent, int flags, int startID) {
+        System.out.println("Service is being launched");
+        Log.println(1, "Service", "Running");
+        // Make sure service is never killed
+        //startForeground(1, null);
+
+        // Connect to Google Play Services
+//        int resp = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+//        System.out.println("About to connect to Google Play Services in MyService");
+//        if (resp == ConnectionResult.SUCCESS) {
+//            System.out.println("Connection is available in MyService");
+//            mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                    .addApi(ActivityRecognition.API)
+//                    .addConnectionCallbacks(this)
+//                    .addOnConnectionFailedListener(this)
+//                    .build();
+//
+//            mGoogleApiClient.connect();
+//        }
         return Service.START_STICKY;
     }
 
@@ -70,13 +86,15 @@ public class MyService extends Service
     public void onConnected(Bundle bundle) {
         System.out.println("Connected to Google Play Services in MyService, about to launch intent");
         Intent i = new Intent(this, ActivityRecognitionService.class);
-        final PendingIntent pi = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mGoogleApiClient, 0, pi);
-        boolean b = new Handler().postDelayed(new Runnable() {
-            public void run() {
-                pi.cancel();
-            }
-        }, 3000);
+        PendingIntent pi = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+        //pi.
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mGoogleApiClient, 10*60*1000, pi);
+//        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates()
+//        boolean b = new Handler().postDelayed(new Runnable() {
+//            public void run() {
+//                pi.cancel();
+//            }
+//        }, 3000);
         //pi.
 //        try {
 //            Thread.sleep(5000);
@@ -84,7 +102,7 @@ public class MyService extends Service
 //            e.printStackTrace();
 //        }
         //ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mGoogleApiClient, pi);
-        stopSelf();
+//        stopSelf();
     }
 
     @Override
@@ -94,6 +112,6 @@ public class MyService extends Service
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        stopSelf();
+
     }
 }

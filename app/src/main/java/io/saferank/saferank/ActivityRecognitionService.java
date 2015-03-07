@@ -39,7 +39,10 @@ public class ActivityRecognitionService extends IntentService {
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             DetectedActivity act = result.getMostProbableActivity();
-            if (act.getType() == DetectedActivity.ON_FOOT) { //DetectedActivity.ON_FOOT
+            if (act.getType() == DetectedActivity.ON_FOOT ||
+                    act.getType() == DetectedActivity.IN_VEHICLE ||
+                    act.getType() == DetectedActivity.ON_BICYCLE) {
+//            if (act.getType() == DetectedActivity.STILL) {
                 int confidence = act.getConfidence();
                 if (confidence > 60) {
                     // Create notification
@@ -69,11 +72,8 @@ public class ActivityRecognitionService extends IntentService {
                             getSystemService(Context.NOTIFICATION_SERVICE);
 
                     mNotificationManager.notify(1, mBuilder.build());
-                    //ActivityRecognition.ActivityRecognitionApi.
-                    //SystemClock.sleep(1000*60*45);
                 }
             }
-            stopSelf();
         }
     }
 

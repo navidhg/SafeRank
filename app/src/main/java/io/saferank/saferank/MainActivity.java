@@ -55,8 +55,8 @@ public class MainActivity
         GoogleApiClient.OnConnectionFailedListener,
         SensorEventListener {
 
-    private int userID = 29;
-    private int userNotificationID = 30;
+    private int userID = 1;
+    private int userNotificationID = 2;
 
     private String serverUploadURL = "http://178.62.32.221:5000/upload";
     private String rowCheckURL = "http://178.62.32.221:5000/data/rows";
@@ -108,11 +108,51 @@ public class MainActivity
 
         // Setup alarm to periodically fire up service to generate notification
         AlarmManager alarmManager = (AlarmManager) getSystemService(this.ALARM_SERVICE);
-        Intent intent = new Intent(this, MyService.class);
-//        this.startService(intent);
+        Intent intent = new Intent(this, FixedService.class);
         PendingIntent alarmIntent = PendingIntent.getService(this, 0, intent, 0);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-                Calendar.getInstance().getTimeInMillis(), 45*60*1000, alarmIntent);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, 10);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, alarmIntent);
+
+
+        calendar.set(Calendar.HOUR_OF_DAY, 11);
+        calendar.set(Calendar.MINUTE, 30);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, alarmIntent);
+
+        calendar.set(Calendar.HOUR_OF_DAY, 12);
+        calendar.set(Calendar.MINUTE, 30);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, alarmIntent);
+
+        calendar.set(Calendar.HOUR_OF_DAY, 15);
+        calendar.set(Calendar.MINUTE, 0);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, alarmIntent);
+
+        calendar.set(Calendar.HOUR_OF_DAY, 18);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, alarmIntent);
+
+        calendar.set(Calendar.HOUR_OF_DAY, 21);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, alarmIntent);
+
+        // Start service that launches activity monitor
+        Intent activityIntent = new Intent(this, MyService.class);
+        this.startService(activityIntent);
+
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+//                Calendar.getInstance().getTimeInMillis(), 1*60*1000, alarmIntent);
         Log.i("LOOK HERE", "ALARM HAS BEEN SET");
 
         // Start service that periodically notifies user to record data
